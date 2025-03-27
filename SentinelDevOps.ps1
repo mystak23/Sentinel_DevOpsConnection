@@ -8,14 +8,10 @@ $serviceConnectionConfigPath = "values/ServiceConnection.json"
 
 # Customer information
 $customer = Read-Host "Enter customer name" #"TEST" 
-#$customerTenantId = Read-Host "Enter customer Tenant ID" #fec3a0fa-64ae-446f-a3a6-2b0eeae14c73
-#$customerSubscriptionId = Read-Host "Enter customer Subscription ID" #66a13036-966e-4910-83ec-b28bc1a66923
-#$customerResourceGroupName = Read-Host "Enter customer Resource Group name" # "RG-Test1828" 
-#$customerWorkspaceName = Read-Host "Enter customer Log Analytics Workspace name" #"RG-Test1828" 
-$customerTenantId = "fec3a0fa-64ae-446f-a3a6-2b0eeae14c73"
-$customerSubscriptionId = "66a13036-966e-4910-83ec-b28bc1a66923"
-$customerResourceGroupName = Read-Host "Enter customer Resource Group name"
-$customerWorkspaceName = Read-Host "Enter customer Log Analytics Workspace name" 
+$customerTenantId = Read-Host "Enter customer Tenant ID" #fec3a0fa-64ae-446f-a3a6-2b0eeae14c73
+$customerSubscriptionId = Read-Host "Enter customer Subscription ID" #66a13036-966e-4910-83ec-b28bc1a66923
+$customerResourceGroupName = Read-Host "Enter customer Resource Group name" # "RG-Test1828" 
+$customerWorkspaceName = Read-Host "Enter customer Log Analytics Workspace name" #"RG-Test1828" 
 
 # DevOps information
 $customerApplicationName = $generalConfig.applicationName
