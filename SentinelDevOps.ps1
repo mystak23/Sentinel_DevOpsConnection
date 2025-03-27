@@ -44,7 +44,8 @@ $headers = @{ Authorization = "Basic $base64AuthInfo" }
 $roles = @(
     "Microsoft Sentinel Contributor",
     "Logic App Contributor",
-    "Monitoring Contributor"
+    "Monitoring Contributor",
+    "Reader"
 )
 
 # ===============================================================================
@@ -104,7 +105,14 @@ Write-Host "[SUCCESS] ✅ Microsoft Entra ID application and federated credentia
 
 # === CREATE SERVICE PRINCIPAL ===
 try {
-    $sp = az ad sp create --id $appId *> $null
+    $spJsonRaw = az ad sp create --id $appId
+    $sp = $spJsonRaw | ConvertFrom-Json
+    if (-not $sp.id) {
+        Write-Host "[ERROR] ❌ Service principal was not created properly. Full response:" -ForegroundColor Red
+        Write-Host $spJsonRaw -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[SUCCESS] ✅ Service Principal created." -ForegroundColor Green
 } catch {
     Write-Host "[ERROR] ❌ Failed to create service principal: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
@@ -118,6 +126,7 @@ foreach ($role in $roles) {
             --assignee-principal-type ServicePrincipal `
             --role $role `
             --scope "/subscriptions/$customerSubscriptionId" *> $null
+        Write-Host "[SUCCESS] ✅ Role '$role' assigned." -ForegroundColor Green
     } catch {
         Write-Host "[ERROR] ❌ Failed to assign role '$role': $($_.Exception.Message)" -ForegroundColor Red
         exit 1
