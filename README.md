@@ -57,3 +57,22 @@ Run the script
 
 #### 2️⃣ Execute the DevOps-part script
 - Log in in the tenant, where the DevOps repository, Service Connection and pipeline will be created.
+
+### 3️⃣ Run the pipeline
+
+#### 1️⃣ Grant pipeline the permission
+- Click on the pipeline and grant the permission
+
+#### 2️⃣ Move all content to the customer repository with the following structure
+- **`1-Watchlists\`** – Watchlists
+- **`2-Parsers\`** – Parsers
+- **`3-HuntingQueries\`** – HuntingQueries
+- **`4-AnalyticRules\`** – AnalyticRules
+- **`5-AutomationRules\`** – AutomationRules
+- **`6-Playbooks\`** – Playbooks
+- **`7-Workbooks\`** – Workbooks
+- **`8-DataCollectionRules\`** – DataCollectionRules
+
+
+
+
