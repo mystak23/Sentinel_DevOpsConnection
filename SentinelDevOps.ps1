@@ -22,7 +22,7 @@ $devOpsOrg = $generalConfig.devOpsOrg
 $devOpsOrgUrl = $generalConfig.devOpsOrgUrl
 $devOpsTenantId = $generalConfig.devOpsTenantId
 $sourcePipelineFolder = $generalConfig.sourcePipelineFolder
-$issuer = $generalConfig.issuer
+$issuer = "$generalConfig.issuer/" + "$customerTenantId/v2.0"
 $audience = $generalConfig.audience
 $subClaim = $generalConfig.subClaim
 
@@ -78,6 +78,21 @@ try {
     exit 1
 }
 
+# === CREATE SERVICE PRINCIPAL ===
+try {
+    $spJsonRaw = az ad sp create --id $appId
+    $sp = $spJsonRaw | ConvertFrom-Json
+    if (-not $sp.id) {
+        Write-Host "[ERROR] ❌ Service principal was not created properly. Full response:" -ForegroundColor Red
+        Write-Host $spJsonRaw -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[SUCCESS] ✅ Service Principal created." -ForegroundColor Green
+} catch {
+    Write-Host "[ERROR] ❌ Failed to create service principal: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
 # === FEDERATED CREDENTIAL ===
 $federatedCredentialFile = "federated.json"
 $federatedCredentialContent = @{
@@ -101,22 +116,7 @@ try {
 
 Remove-Item $federatedCredentialFile
 
-Write-Host "[SUCCESS] ✅ Microsoft Entra ID application and federated credential configured." -ForegroundColor Green
-
-# === CREATE SERVICE PRINCIPAL ===
-try {
-    $spJsonRaw = az ad sp create --id $appId
-    $sp = $spJsonRaw | ConvertFrom-Json
-    if (-not $sp.id) {
-        Write-Host "[ERROR] ❌ Service principal was not created properly. Full response:" -ForegroundColor Red
-        Write-Host $spJsonRaw -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "[SUCCESS] ✅ Service Principal created." -ForegroundColor Green
-} catch {
-    Write-Host "[ERROR] ❌ Failed to create service principal: $($_.Exception.Message)" -ForegroundColor Red
-    exit 1
-}
+Write-Host "[SUCCESS] ✅ Microsoft Entra ID federated credential configured." -ForegroundColor Green
 
 # === ASSIGN ROLES ===
 foreach ($role in $roles) {
@@ -303,7 +303,7 @@ $body = @{
         path = "pipeline.yml"
         repository = @{
             id = $repoId
-            name = $repoName
+            name = $repoNamef
             type = "azureReposGit"
             defaultBranch = "refs/heads/$branch"
         }
@@ -351,3 +351,8 @@ if (Test-Path $clonePath) {
         exit 1
     }
 }
+
+# === 3. LOGIN TO CUSTOMER TENANT ===
+Write-Host "`n[INSTRUCTION] 🟡 1. Login to the customer tenant" -ForegroundColor Yellow
+Read-Host "Press Enter to continue with customer tenant login!"
+az login --tenant $customerTenantId --allow-no-subscriptions *> $null

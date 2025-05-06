@@ -1,10 +1,10 @@
 {
   "defaultBranch": null,
-  "id": "d8710432-9c8c-4861-a339-d829e1698c2e",
+  "id": "5ab16a8e-61af-46bf-a0d2-be2fe4e2b577",
   "isDisabled": false,
   "isFork": null,
   "isInMaintenance": false,
-  "name": "Sentinel-Test1744",
+  "name": "Sentinel-TESTING",
   "parentRepository": null,
   "project": {
     "abbreviation": null,
@@ -18,10 +18,10 @@
     "url": "https://dev.azure.com/mainstreamcz/_apis/projects/131987ea-b12b-4255-bfdf-8211f9dec24e",
     "visibility": "private"
   },
-  "remoteUrl": "https://mainstreamcz@dev.azure.com/mainstreamcz/Mainstream.Security/_git/Sentinel-Test1744",
+  "remoteUrl": "https://mainstreamcz@dev.azure.com/mainstreamcz/Mainstream.Security/_git/Sentinel-TESTING",
   "size": 0,
-  "sshUrl": "git@ssh.dev.azure.com:v3/mainstreamcz/Mainstream.Security/Sentinel-Test1744",
-  "url": "https://dev.azure.com/mainstreamcz/131987ea-b12b-4255-bfdf-8211f9dec24e/_apis/git/repositories/d8710432-9c8c-4861-a339-d829e1698c2e",
+  "sshUrl": "git@ssh.dev.azure.com:v3/mainstreamcz/Mainstream.Security/Sentinel-TESTING",
+  "url": "https://dev.azure.com/mainstreamcz/131987ea-b12b-4255-bfdf-8211f9dec24e/_apis/git/repositories/5ab16a8e-61af-46bf-a0d2-be2fe4e2b577",
   "validRemoteUrls": null,
-  "webUrl": "https://dev.azure.com/mainstreamcz/Mainstream.Security/_git/Sentinel-Test1744"
+  "webUrl": "https://dev.azure.com/mainstreamcz/Mainstream.Security/_git/Sentinel-TESTING"
 }
