@@ -1,3 +1,7 @@
+# Note
+
+Since the Microsoft updated Service Connection creation in Azure DevOps, the script does NOT generate fully functioning Service Principal with Federated Credential. Manual Issuer and Claims insertion is needed after the script is executed. The script will be fixed.
+
 # Author
 
 Matěj Hrabálek -- https://www.linkedin.com/in/matejhrabalek/
