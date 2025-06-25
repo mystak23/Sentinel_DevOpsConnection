@@ -4,7 +4,7 @@ Matěj Hrabálek -- https://www.linkedin.com/in/matejhrabalek/
 
 # 📌 Sentinel DevOps Connection
 
-This script creates the new Azure DevOps repository with Microsoft Code content.
+This script creates the new Azure DevOps repository with Microsoft Sentinel code content.
 
 ## 📂 Repository Structure
 
