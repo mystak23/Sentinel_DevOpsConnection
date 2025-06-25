@@ -7,11 +7,11 @@ $generalConfig = Get-Content $generalConfigPath | ConvertFrom-Json
 $serviceConnectionConfigPath = "values/ServiceConnection.json"
 
 # Customer information
-$customer = Read-Host "Enter customer name" #"TEST" 
-$customerTenantId = Read-Host "Enter customer Tenant ID" #fec3a0fa-64ae-446f-a3a6-2b0eeae14c73
-$customerSubscriptionId = Read-Host "Enter customer Subscription ID" #66a13036-966e-4910-83ec-b28bc1a66923
-$customerResourceGroupName = Read-Host "Enter customer Resource Group name" # "RG-Test1828" 
-$customerWorkspaceName = Read-Host "Enter customer Log Analytics Workspace name" #"RG-Test1828" 
+$customer = Read-Host "Enter customer name" 
+$customerTenantId = Read-Host "Enter customer Tenant ID"
+$customerSubscriptionId = Read-Host "Enter customer Subscription ID"
+$customerResourceGroupName = Read-Host "Enter customer Resource Group name"
+$customerWorkspaceName = Read-Host "Enter customer Log Analytics Workspace name" 
 
 # DevOps information
 $customerApplicationName = $generalConfig.applicationName
@@ -22,14 +22,8 @@ $devOpsOrg = $generalConfig.devOpsOrg
 $devOpsOrgUrl = $generalConfig.devOpsOrgUrl
 $devOpsTenantId = $generalConfig.devOpsTenantId
 $sourcePipelineFolder = $generalConfig.sourcePipelineFolder
-$issuer = "$generalConfig.issuer/" + "$customerTenantId/v2.0"
 $audience = $generalConfig.audience
-$subClaim = $generalConfig.subClaim
 
-if ([string]::IsNullOrWhiteSpace($subClaim)) {
-    Write-Error "❌ The variable 'subClaim' cannot be empty. Check the configuration in DevOps.json."
-    exit 1
-}
 
 # Input
 $serviceConnectionName = "Sentinel-$customer"
@@ -48,8 +42,6 @@ $roles = @(
     "Reader"
 )
 
-# ===============================================================================
-
 # -----------------------------------------
 # 1. Microsoft Entra ID Application Registration
 # -----------------------------------------
@@ -57,7 +49,7 @@ Write-Host "[START] 🏢 Registering Entra ID application..." -ForegroundColor B
 
 # === LOGIN TO CUSTOMER TENANT ===
 Write-Host "`n[INSTRUCTION] 🟡 1. Login to the customer tenant" -ForegroundColor Yellow
-Read-Host "Press Enter to continue with customer tenant login!"
+Read-Host "Press Enter to continue with customer tenant login"
 az login --tenant $customerTenantId --allow-no-subscriptions *> $null
 
 # === CREATE APPLICATION ===
@@ -93,31 +85,6 @@ try {
     exit 1
 }
 
-# === FEDERATED CREDENTIAL ===
-$federatedCredentialFile = "federated.json"
-$federatedCredentialContent = @{
-    name = "DevOpsFederatedLogin"
-    issuer = "$issuer"
-    subject = "$subClaim/Sentinel-$customer"
-    audiences = @("$audience")
-}
-
-$federatedCredentialContent | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $federatedCredentialFile
-
-try {
-    az ad app federated-credential create `
-        --id $appObjectId `
-        --parameters $federatedCredentialFile *> $null
-    Write-Host "[SUCCESS] ✅ Federated credential created and attached to the application" -ForegroundColor Green
-} catch {
-    Write-Host "[ERROR] ❌ Failed to create federated credential: $($_.Exception.Message)" -ForegroundColor Red
-    exit 1
-}
-
-Remove-Item $federatedCredentialFile
-
-Write-Host "[SUCCESS] ✅ Microsoft Entra ID federated credential configured." -ForegroundColor Green
-
 # === ASSIGN ROLES ===
 foreach ($role in $roles) {
     try {
@@ -133,9 +100,11 @@ foreach ($role in $roles) {
     }
 }
 
+# ===============================================================================
+
 # === LOGIN BACK TO YOUR TENANT ===
 Write-Host "`n[INSTRUCTION] 🟡 2. Login to the DevOps tenant" -ForegroundColor Yellow
-Read-Host "Press Enter to continue with DevOps tenant login!"
+Read-Host "Press Enter to continue with DevOps tenant login"
 az login --tenant $devOpsTenantId --allow-no-subscriptions *> $null
 
 # -----------------------------------------
@@ -169,6 +138,7 @@ catch {
     Write-Host "[ERROR] ❌ Azure DevOps repository project ID was not retrieved." -ForegroundColor Red
 }
 # === CREATE SERVICE CONNECTION ===
+
 if (-not $appId) {
     Write-Host "[ERROR] ❌ App ID is empty." -ForegroundColor Red
     exit 1
@@ -211,6 +181,27 @@ try {
 } catch {
     Write-Host "[ERROR] ❌ Failed to create service connection: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
+}
+
+# === GET ISSUER AND SUBJECT IDENTIFIER ===
+
+$base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$pat"))
+$headers = @{
+    Authorization = "Basic $base64Auth"
+    "Content-Type" = "application/json"
+}
+
+$endpointUrl = "https://dev.azure.com/$devOpsOrg/$projectName/_apis/serviceendpoint/endpoints?endpointNames=$serviceConnectionName&api-version=7.0-preview.4"
+try {
+    $response = Invoke-RestMethod -Uri $endpointUrl -Method Get -Headers $headers
+    $serviceConnection = $response.value[0]
+
+    $issuer = $serviceConnection.authorization.parameters.workloadIdentityFederationIssuer
+    $subject = $serviceConnection.authorization.parameters.workloadIdentityFederationSubject
+
+    Write-Host "`[SUCCESS] ✅ Issuer and SubjectIdentifier values were retrieved." -ForegroundColor Green
+} catch {
+    Write-Host "`[ERROR] ❌ Issuer and SubjectIdentifier values failed to retrieve: $($_.Exception.Message)" -ForegroundColor Red
 }
 
 Remove-Item $devOpsJsonPath
@@ -352,7 +343,41 @@ if (Test-Path $clonePath) {
     }
 }
 
+# ===============================================================================
+
 # === 3. LOGIN TO CUSTOMER TENANT ===
-Write-Host "`n[INSTRUCTION] 🟡 1. Login to the customer tenant" -ForegroundColor Yellow
-Read-Host "Press Enter to continue with customer tenant login!"
+Write-Host "`n[INSTRUCTION] 🟡 3. Login to the customer tenant" -ForegroundColor Yellow
+Read-Host "Press Enter to continue with customer tenant login"
 az login --tenant $customerTenantId --allow-no-subscriptions *> $null
+
+# === FEDERATED CREDENTIAL ===
+$federatedCredentialFile = "federated.json"
+$federatedCredentialContent = @{
+    name = "DevOpsFederatedLogin"
+    issuer = "$issuer"
+    subject = "$subject"
+    audiences = @("$audience")
+}
+
+$federatedCredentialContent | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $federatedCredentialFile
+
+try {
+    $azOutput = az ad app federated-credential create `
+        --id $appObjectId `
+        --parameters $federatedCredentialFile 2>&1
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[SUCCESS] ✅ Federated credential created and attached to the application" -ForegroundColor Green
+    } else {
+        Write-Host "[ERROR] ❌ Failed to create federated credential. Azure CLI output:" -ForegroundColor Red
+        Write-Host $azOutput -ForegroundColor Red
+        exit 1
+    }
+} catch {
+    Write-Host "[ERROR] ❌ Exception during federated credential creation: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
+Remove-Item $federatedCredentialFile
+
+Write-Host "[SUCCESS] ✅ Microsoft Entra ID federated credential configured." -ForegroundColor Green

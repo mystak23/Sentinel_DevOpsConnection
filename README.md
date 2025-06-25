@@ -1,14 +1,10 @@
-# Note
-
-Since the Microsoft updated Service Connection creation in Azure DevOps, the script does NOT generate fully functioning Service Principal with Federated Credential. Manual Issuer and Claims insertion is needed after the script is executed. The script will be fixed.
-
 # Author
 
 Matěj Hrabálek -- https://www.linkedin.com/in/matejhrabalek/
 
 # 📌 Sentinel DevOps Connection
 
-This repository contains script for automatic Microsoft Sentinel deployment.
+This script creates the new Azure DevOps repository with Microsoft Code content.
 
 ## 📂 Repository Structure
 
@@ -22,11 +18,12 @@ These parameters are general and might be modified in the script:
    - **Location:** North Europe
    - **Tier:** Pay-as-you-go
 
-The script is working in **two** tenants -- the customer, in which the Microsoft Sentinel is located, and the DevOps tenant, in which the Azure DevOps will be deployed. 
+The script is working in **two** tenants -- the customer, in which the Microsoft Sentinel is located, and the DevOps tenant, in which the Azure DevOps repository will be deployed. 
 
 1. 🚀 **Create the Microsoft Entra ID application**  
    - Creates the Microsoft Entra ID application in the customer tenant
    - Creates the federated credential
+   - Assigns the application **Microsoft Sentinel Contributor**, **Monitoring Contributor** and **Logic App Contributor** roles
 
 2. 🛠️ **Create the DevOps**  
    - Creates the DevOps repository
@@ -41,10 +38,25 @@ Ensure you have the following:
 - **Microsoft Sentinel** with appropriate permissions.
 - **Owner** permissions on the target Azure subscription
 - **PowerShell 7+** (for executing `.ps1` scripts).
-- **Azure DevOps** license
--  **`./DevOps.json`** file for customer-specific values - or change the script
+- **Azure DevOps** license (if needed)
+-  **`./values/DevOps.json`** file for customer-specific values with following structure (can be replaced in code)
+   ```
+   {
+     "applicationName": "Sentinel-DevOps",
+     "pat": "<your_PAT>",
+     "projectName": "<your_DevOps_Project_Name>",
+     "repoName": "Sentinel",
+     "devOpsOrg": "<your_DevOps_Organization_Name>",
+     "devOpsOrgUrl": "<your_DevOps_Organization_Url>",
+     "devOpsTenantId": "<your_DevOps_Organization_TenantId>",
+     "clonePath": "Join-Path -Path $PWD -ChildPath $repoName",
+     "sourcePipelineFolder": ".devops-pipeline",
+     "audience": "api://AzureADTokenExchange",
+     "devOpsJsonPath": null
+   }
+   ```
 -  **`./.devops-pipeline`** folder, which contains `pipeline.yml` pipeline file
-- **PAT** (Personal Access Token) in Azure DevOps
+- Insert Azure DevOps **PAT** (Personal Access Token) to the **`./values/DevOps.json`**
 
 ## 2️⃣ Deployment Steps
 
